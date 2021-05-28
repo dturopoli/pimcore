@@ -1,17 +1,16 @@
 <?php
+
 /**
  * Pimcore
  *
  * This source file is available under two different licenses:
  * - GNU General Public License version 3 (GPLv3)
- * - Pimcore Enterprise License (PEL)
+ * - Pimcore Commercial License (PCL)
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @category   Pimcore
- *
- * @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
- * @license    http://www.pimcore.org/license     GPLv3 and PEL
+ *  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
+ *  @license    http://www.pimcore.org/license     GPLv3 and PCL
  */
 
 namespace Pimcore\Bundle\AdminBundle\Controller\Admin\DataObject;
@@ -25,6 +24,9 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
 
+/**
+ *  @internal
+ */
 class QuantityValueController extends AdminController
 {
     /**
@@ -40,16 +42,18 @@ class QuantityValueController extends AdminController
     {
         $list = new Unit\Listing();
 
-        $orderKey = 'abbreviation';
-        $order = 'asc';
+        $order = ['ASC', 'ASC', 'ASC'];
+        $orderKey = ['baseunit', 'factor', 'abbreviation'];
 
         $allParams = array_merge($request->request->all(), $request->query->all());
         $sortingSettings = \Pimcore\Bundle\AdminBundle\Helper\QueryParams::extractSortingSettings($allParams);
+
+        // Prepend user-requested sorting settings but keep the others to keep secondary order of quantity values in respective order
         if ($sortingSettings['orderKey']) {
-            $orderKey = $sortingSettings['orderKey'];
+            array_unshift($orderKey, $sortingSettings['orderKey']);
         }
         if ($sortingSettings['order']) {
-            $order = $sortingSettings['order'];
+            array_unshift($order, $sortingSettings['order']);
         }
 
         $list->setOrder($order);
@@ -73,11 +77,10 @@ class QuantityValueController extends AdminController
             }
             $list->setCondition($condition);
         }
-        $list->load();
 
         $units = [];
         foreach ($list->getUnits() as $u) {
-            $units[] = get_object_vars($u);
+            $units[] = $u->getObjectVars();
         }
 
         return $this->adminJson(['data' => $units, 'success' => true, 'total' => $list->getTotalCount()]);
@@ -116,7 +119,7 @@ class QuantityValueController extends AdminController
                     $unit->setValues($data);
                     $unit->save();
 
-                    return $this->adminJson(['data' => get_object_vars($unit), 'success' => true]);
+                    return $this->adminJson(['data' => $unit->getObjectVars(), 'success' => true]);
                 } else {
                     throw new \Exception('Unit with id ' . $data['id'] . ' not found.');
                 }
@@ -135,7 +138,7 @@ class QuantityValueController extends AdminController
                 $unit->setValues($data);
                 $unit->save();
 
-                return $this->adminJson(['data' => get_object_vars($unit), 'success' => true]);
+                return $this->adminJson(['data' => $unit->getObjectVars(), 'success' => true]);
             }
         }
 
@@ -168,8 +171,8 @@ class QuantityValueController extends AdminController
     public function unitListAction(Request $request)
     {
         $list = new Unit\Listing();
-        $list->setOrderKey('abbreviation');
-        $list->setOrder('ASC');
+        $list->setOrderKey(['baseunit', 'factor', 'abbreviation']);
+        $list->setOrder(['ASC', 'ASC', 'ASC']);
         if ($request->get('filter')) {
             $array = explode(',', $request->get('filter'));
             $quotedArray = [];
@@ -181,9 +184,9 @@ class QuantityValueController extends AdminController
             $list->setCondition('id IN (' . $string . ')');
         }
 
+        $result = [];
         $units = $list->getUnits();
-
-        foreach ($units as $unit) {
+        foreach ($units as &$unit) {
             try {
                 if ($unit->getAbbreviation()) {
                     $unit->setAbbreviation(\Pimcore\Model\Translation::getByKeyLocalized($unit->getAbbreviation(), Translation::DOMAIN_ADMIN,
@@ -193,22 +196,24 @@ class QuantityValueController extends AdminController
                     $unit->setLongname(\Pimcore\Model\Translation::getByKeyLocalized($unit->getLongname(), Translation::DOMAIN_ADMIN, true,
                         true));
                 }
+                $result[] = $unit->getObjectVars();
             } catch (\Exception $e) {
                 // nothing to do ...
             }
         }
 
-        return $this->adminJson(['data' => $units, 'success' => true, 'total' => $list->getTotalCount()]);
+        return $this->adminJson(['data' => $result, 'success' => true, 'total' => $list->getTotalCount()]);
     }
 
     /**
      * @Route("/quantity-value/convert", name="pimcore_admin_dataobject_quantityvalue_convert", methods={"GET"})
      *
      * @param Request $request
+     * @param UnitConversionService $conversionService
      *
      * @return JsonResponse
      */
-    public function convertAction(Request $request)
+    public function convertAction(Request $request, UnitConversionService $conversionService)
     {
         $fromUnitId = $request->get('fromUnit');
         $toUnitId = $request->get('toUnit');
@@ -219,10 +224,8 @@ class QuantityValueController extends AdminController
             return $this->adminJson(['success' => false]);
         }
 
-        /** @var UnitConversionService $converter */
-        $converter = $this->container->get(UnitConversionService::class);
         try {
-            $convertedValue = $converter->convert(new QuantityValue($request->get('value'), $fromUnit), $toUnit);
+            $convertedValue = $conversionService->convert(new QuantityValue($request->get('value'), $fromUnit), $toUnit);
         } catch (\Exception $e) {
             return $this->adminJson(['success' => false]);
         }
@@ -234,10 +237,11 @@ class QuantityValueController extends AdminController
      * @Route("/quantity-value/convert-all", name="pimcore_admin_dataobject_quantityvalue_convertall", methods={"GET"})
      *
      * @param Request $request
+     * @param UnitConversionService $conversionService
      *
      * @return JsonResponse
      */
-    public function convertAllAction(Request $request)
+    public function convertAllAction(Request $request, UnitConversionService $conversionService)
     {
         $unitId = $request->get('unit');
 
@@ -250,14 +254,11 @@ class QuantityValueController extends AdminController
 
         $units = new Unit\Listing();
         $units->setCondition('baseunit = '.$units->quote($baseUnit->getId()).' AND id != '.$units->quote($fromUnit->getId()));
-        $units = $units->load();
 
         $convertedValues = [];
-        /** @var UnitConversionService $converter */
-        $converter = $this->container->get(UnitConversionService::class);
-        foreach ($units as $targetUnit) {
+        foreach ($units->getUnits() as $targetUnit) {
             try {
-                $convertedValue = $converter->convert(new QuantityValue($request->get('value'), $fromUnit), $targetUnit);
+                $convertedValue = $conversionService->convert(new QuantityValue($request->get('value'), $fromUnit), $targetUnit);
 
                 $convertedValues[] = ['unit' => $targetUnit->getAbbreviation(), 'unitName' => $targetUnit->getLongname(), 'value' => round($convertedValue->getValue(), 4)];
             } catch (\Exception $e) {

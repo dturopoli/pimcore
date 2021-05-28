@@ -3,12 +3,12 @@
  *
  * This source file is available under two different licenses:
  * - GNU General Public License version 3 (GPLv3)
- * - Pimcore Enterprise License (PEL)
+ * - Pimcore Commercial License (PCL)
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
  * @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
- * @license    http://www.pimcore.org/license     GPLv3 and PEL
+ * @license    http://www.pimcore.org/license     GPLv3 and PCL
  */
 
 pimcore.registerNS("pimcore.object.classes.data.geo.abstract");
@@ -73,7 +73,7 @@ pimcore.object.classes.data.geo.abstract = Class.create(pimcore.object.classes.d
                 xtype: "textfield",
                 fieldLabel: t("width"),
                 name: "width",
-                value: this.datax.width
+                value: datax.width
             },
             {
                 xtype: "displayfield",
@@ -84,7 +84,7 @@ pimcore.object.classes.data.geo.abstract = Class.create(pimcore.object.classes.d
                 xtype: "textfield",
                 fieldLabel: t("height"),
                 name: "height",
-                value: this.datax.height || 180
+                value: datax.height || 180
             },
             {
                 xtype: "displayfield",

@@ -7,12 +7,12 @@ declare(strict_types=1);
  *
  * This source file is available under two different licenses:
  * - GNU General Public License version 3 (GPLv3)
- * - Pimcore Enterprise License (PEL)
+ * - Pimcore Commercial License (PCL)
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
- * @license    http://www.pimcore.org/license     GPLv3 and PEL
+ *  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
+ *  @license    http://www.pimcore.org/license     GPLv3 and PCL
  */
 
 namespace Pimcore\Tests\Unit\Translation;
@@ -45,6 +45,8 @@ class TranslatorTest extends TestCase
             'text_params' => 'Text with %Param1% and %Param2%',
             'count_key' => '%count% Count',
             'count_key_190' => 'This is a translated text generated from translator service, using count parameter to be replaced from passed parameters and having %count% characters to test text greater than 190 characters.',
+            'count_plural_1' => '1 Item',
+            'count_plural_n' => '%count% Items',
             'case_key' => 'Lower Case Key',
             'CASE_KEY' => 'Upper Case Key',
         ],
@@ -61,7 +63,7 @@ class TranslatorTest extends TestCase
     ];
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function setUp(): void
     {
@@ -179,6 +181,13 @@ class TranslatorTest extends TestCase
         $this->assertEquals(strtr($this->translations['en']['count_key_190'], ['%count%' => 192]), $this->translator->trans('count_key_190', ['%count%' => 192]));
     }
 
+    public function testTranslatePluralizationWithCountParam()
+    {
+        $this->translator->setLocale('en');
+        $this->assertEquals($this->translations['en']['count_plural_1'], $this->translator->trans('count_plural_1|count_plural_n', ['%count%' => 1]));
+        $this->assertEquals(strtr($this->translations['en']['count_plural_n'], ['%count%' => 5]), $this->translator->trans('count_plural_1|count_plural_n', ['%count%' => 5]));
+    }
+
     public function testTranslateCaseSensitive()
     {
         // Case sensitive
@@ -188,5 +197,21 @@ class TranslatorTest extends TestCase
 
         //Upper case key
         $this->assertEquals($this->translations['en']['CASE_KEY'], $this->translator->trans('CASE_KEY'));
+    }
+
+    public function testLoadingTranslationList()
+    {
+        $translations = new Translation\Listing();
+        $translations->setDomain('messages');
+
+        $translations = $translations->getTranslations();
+        $this->assertCount(count($this->translations['en']), $translations);
+
+        $translations = new Translation\Listing();
+        $translations->setDomain('messages');
+        $translations->addConditionParam('`key` like :key', ['key' => 'simple%']);
+
+        $translations = $translations->getTranslations();
+        $this->assertCount(1, $translations);
     }
 }

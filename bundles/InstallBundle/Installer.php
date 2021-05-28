@@ -7,17 +7,18 @@ declare(strict_types=1);
  *
  * This source file is available under two different licenses:
  * - GNU General Public License version 3 (GPLv3)
- * - Pimcore Enterprise License (PEL)
+ * - Pimcore Commercial License (PCL)
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
- * @license    http://www.pimcore.org/license     GPLv3 and PEL
+ *  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
+ *  @license    http://www.pimcore.org/license     GPLv3 and PCL
  */
 
 namespace Pimcore\Bundle\InstallBundle;
 
 use Doctrine\DBAL\Configuration;
+use Doctrine\DBAL\Driver\ServerInfoAwareConnection;
 use Doctrine\DBAL\DriverManager;
 use PDO;
 use Pimcore\Bundle\InstallBundle\Event\InstallerStepEvent;
@@ -40,6 +41,9 @@ use Symfony\Component\HttpKernel\KernelInterface;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
+/**
+ * @internal
+ */
 class Installer
 {
     const EVENT_NAME_STEP = 'pimcore.installer.step';
@@ -62,9 +66,9 @@ class Installer
     private $dbCredentials;
 
     /**
-     * @var PimcoreStyle
+     * @var PimcoreStyle|null
      */
-    private $commandLineOutput;
+    private ?PimcoreStyle $commandLineOutput = null;
 
     /**
      * When false, skips creating database structure during install
@@ -264,17 +268,6 @@ class Installer
         $adminUser = $params['admin_username'] ?? '';
         $adminPass = $params['admin_password'] ?? '';
 
-        //check skipping database creation or database data
-        if (array_key_exists('skip_database_structure', $params)) {
-            $this->createDatabaseStructure = false;
-        }
-        if (array_key_exists('skip_database_data', $params)) {
-            $this->importDatabaseData = false;
-        }
-        if (array_key_exists('skip_database_data_dump', $params)) {
-            $this->importDatabaseDataDump = false;
-        }
-
         if (strlen($adminPass) < 4 || strlen($adminUser) < 4) {
             $errors[] = 'Username and password should have at least 4 characters';
         }
@@ -365,23 +358,32 @@ class Installer
             'bit' => 'boolean',
         ];
 
-        $this->createConfigFiles([
+        $doctrineConfig = [
             'doctrine' => [
                 'dbal' => [
-                  'connections' => [
-                      'default' => $dbConfig,
-                  ],
+                    'connections' => [
+                        'default' => $dbConfig,
+                    ],
                 ],
             ],
-        ]);
+        ];
+
+        $this->createConfigFiles($doctrineConfig);
 
         $this->dispatchStepEvent('boot_kernel');
 
         // resolve environment with default=dev here as we set debug mode to true and want to
         // load the kernel for the same environment as the app.php would do. the kernel booted here
         // will always be in "dev" with the exception of an environment set via env vars
-        $environment = Config::getEnvironment(true, 'dev');
-        $kernel = new \App\Kernel($environment, true);
+        $environment = Config::getEnvironment();
+
+        $kernel = \App\Kernel::class;
+
+        if (isset($_ENV['PIMCORE_KERNEL_CLASS'])) {
+            $kernel = $_ENV['PIMCORE_KERNEL_CLASS'];
+        }
+
+        $kernel = new $kernel($environment, true);
 
         $this->clearKernelCacheDir($kernel);
 
@@ -392,6 +394,19 @@ class Installer
         $this->dispatchStepEvent('setup_database');
 
         $errors = $this->setupDatabase($userCredentials, $errors);
+
+        if (!$this->skipDatabaseConfig) {
+            // now we're able to write the server version to the database.yml
+            $db = \Pimcore\Db::get();
+            if ($db instanceof Connection) {
+                $connection = $db->getWrappedConnection();
+                if ($connection instanceof ServerInfoAwareConnection) {
+                    $writer = new ConfigWriter();
+                    $doctrineConfig['doctrine']['dbal']['connections']['default']['server_version'] = $connection->getServerVersion();
+                    $writer->writeDbConfig($doctrineConfig);
+                }
+            }
+        }
 
         $this->dispatchStepEvent('install_assets');
         $this->installAssets($kernel);
@@ -533,7 +548,6 @@ class Installer
         }
 
         $writer->writeSystemConfig();
-        $writer->writeDebugModeConfig();
     }
 
     private function clearKernelCacheDir(KernelInterface $kernel)
@@ -555,6 +569,7 @@ class Installer
 
         $filesystem->rename($cacheDir, $oldCacheDir);
         $filesystem->mkdir($cacheDir);
+
         try {
             $filesystem->remove($oldCacheDir);
         } catch (IOException $e) {
@@ -626,7 +641,7 @@ class Installer
     {
         $defaultConfig = [
             'username' => 'admin',
-            'password' => md5(microtime()),
+            'password' => bin2hex(random_bytes(16)),
         ];
 
         $settings = array_replace_recursive($defaultConfig, $config);

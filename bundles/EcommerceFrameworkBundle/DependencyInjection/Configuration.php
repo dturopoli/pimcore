@@ -7,12 +7,12 @@ declare(strict_types=1);
  *
  * This source file is available under two different licenses:
  * - GNU General Public License version 3 (GPLv3)
- * - Pimcore Enterprise License (PEL)
+ * - Pimcore Commercial License (PCL)
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
- * @license    http://www.pimcore.org/license     GPLv3 and PEL
+ *  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
+ *  @license    http://www.pimcore.org/license     GPLv3 and PCL
  */
 
 namespace Pimcore\Bundle\EcommerceFrameworkBundle\DependencyInjection;
@@ -46,8 +46,6 @@ use Pimcore\Bundle\EcommerceFrameworkBundle\Tracking\TrackingItemBuilder;
 use Pimcore\Bundle\EcommerceFrameworkBundle\Tracking\TrackingManager;
 use Pimcore\Bundle\EcommerceFrameworkBundle\VoucherService\DefaultService as DefaultVoucherService;
 use Pimcore\Bundle\EcommerceFrameworkBundle\VoucherService\TokenManager\TokenManagerFactory;
-use Pimcore\Model\DataObject\OfferToolOffer;
-use Pimcore\Model\DataObject\OfferToolOfferItem;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
@@ -55,7 +53,10 @@ use Symfony\Component\Config\Definition\Builder\VariableNodeDefinition;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 
-class Configuration implements ConfigurationInterface
+/**
+ * @internal
+ */
+final class Configuration implements ConfigurationInterface
 {
     /**
      * @var TenantProcessor
@@ -81,12 +82,13 @@ class Configuration implements ConfigurationInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function getConfigTreeBuilder()
     {
         $treeBuilder = new TreeBuilder('pimcore_ecommerce_framework');
 
+        /** @var ArrayNodeDefinition $rootNode */
         $rootNode = $treeBuilder->getRootNode();
         $rootNode->addDefaultsIfNotSet();
 
@@ -128,6 +130,7 @@ class Configuration implements ConfigurationInterface
     {
         $builder = new TreeBuilder('pimcore');
 
+        /** @var ArrayNodeDefinition $pimcore */
         $pimcore = $builder->getRootNode();
         $pimcore
             ->addDefaultsIfNotSet()
@@ -1004,12 +1007,12 @@ class Configuration implements ConfigurationInterface
                         ->scalarNode('offer_class')
                             ->info('Pimcore object class for offers')
                             ->cannotBeEmpty()
-                            ->defaultValue(OfferToolOffer::class)
+                            ->defaultValue('Pimcore\\Model\\DataObject\\OfferToolOffer')
                         ->end()
                         ->scalarNode('offer_item_class')
                             ->info('Pimcore object class for offer items')
                             ->cannotBeEmpty()
-                            ->defaultValue(OfferToolOfferItem::class)
+                            ->defaultValue('Pimcore\\Model\\DataObject\\OfferToolOfferItem')
                         ->end()
                         ->scalarNode('parent_folder_path')
                             ->info('default path for new offers')

@@ -1,28 +1,33 @@
 <?php
+
 /**
  * Pimcore
  *
  * This source file is available under two different licenses:
  * - GNU General Public License version 3 (GPLv3)
- * - Pimcore Enterprise License (PEL)
+ * - Pimcore Commercial License (PCL)
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
- * @license    http://www.pimcore.org/license     GPLv3 and PEL
+ *  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
+ *  @license    http://www.pimcore.org/license     GPLv3 and PCL
  */
 
 namespace Pimcore\HttpKernel\CacheWarmer;
 
+use Doctrine\DBAL\Exception\DriverException;
 use Pimcore\Bootstrap;
 use Pimcore\Model\Asset;
 use Pimcore\Model\DataObject;
 use Symfony\Component\HttpKernel\CacheWarmer\CacheWarmerInterface;
 
+/**
+ * @internal
+ */
 class PimcoreCoreCacheWarmer implements CacheWarmerInterface
 {
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function isOptional()
     {
@@ -30,7 +35,7 @@ class PimcoreCoreCacheWarmer implements CacheWarmerInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function warmUp($cacheDir)
     {
@@ -40,7 +45,15 @@ class PimcoreCoreCacheWarmer implements CacheWarmerInterface
         $this->modelClasses($classes);
 
         if (\Pimcore::isInstalled()) {
-            $this->dataObjectClasses($classes);
+            try {
+                $this->dataObjectClasses($classes);
+            } catch (\Exception $exception) {
+                if (!$exception instanceof DriverException) {
+                    throw $exception;
+                }
+
+                //Ignore. Database might not be setup yet
+            }
         }
 
         return $classes;
@@ -48,7 +61,7 @@ class PimcoreCoreCacheWarmer implements CacheWarmerInterface
 
     private function libraryClasses(array &$classes): void
     {
-        $excludePattern = '@/lib/(Migrations|Maintenance|Sitemap|Workflow|Console|Composer|Translation/(Import|Export)|Image/Optimizer|DataObject/(GridColumnConfig|Import)|Test|Tool/Transliteration|(Pimcore|simple_html_dom)\.php)@';
+        $excludePattern = '@/lib/(Migrations|Maintenance|Sitemap|Workflow|Console|Composer|Translation/(Import|Export)|Image/Optimizer|DataObject/(GridColumnConfig|Import)|Test|Tool/Transliteration|(Pimcore)\.php)@';
 
         $reflection = new \ReflectionClass(Bootstrap::class);
         $dir = dirname($reflection->getFileName());

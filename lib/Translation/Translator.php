@@ -1,15 +1,16 @@
 <?php
+
 /**
  * Pimcore
  *
  * This source file is available under two different licenses:
  * - GNU General Public License version 3 (GPLv3)
- * - Pimcore Enterprise License (PEL)
+ * - Pimcore Commercial License (PCL)
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
- * @license    http://www.pimcore.org/license     GPLv3 and PEL
+ *  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
+ *  @license    http://www.pimcore.org/license     GPLv3 and PCL
  */
 
 namespace Pimcore\Translation;
@@ -152,6 +153,8 @@ class Translator implements TranslatorInterface, TranslatorBagInterface, LocaleA
     }
 
     /**
+     * @internal
+     *
      * @param string $domain
      * @param string $locale
      */
@@ -170,6 +173,7 @@ class Translator implements TranslatorInterface, TranslatorBagInterface, LocaleA
 
             if (!$catalogue = Cache::load($cacheKey)) {
                 $data = ['__pimcore_dummy' => 'only_a_dummy'];
+                $dataIntl = ['__pimcore_dummy' => 'only_a_dummy'];
 
                 if ($domain == 'admin') {
                     $jsonFiles = [
@@ -214,7 +218,11 @@ class Translator implements TranslatorInterface, TranslatorBagInterface, LocaleA
                             $translationTerm = $translationKey;
                         }
 
-                        $data[$translationKey] = $translationTerm;
+                        if (empty($translation['type']) || $translation['type'] === 'simple') {
+                            $data[$translationKey] = $translationTerm;
+                        } else {
+                            $dataIntl[$translationKey] = $translationTerm;
+                        }
                     }
                 }
 
@@ -229,7 +237,10 @@ class Translator implements TranslatorInterface, TranslatorBagInterface, LocaleA
                     }
                 }
 
-                $data = [$domain => $data];
+                $data = [
+                    $domain => $data,
+                    $domain.MessageCatalogue::INTL_DOMAIN_SUFFIX => $dataIntl,
+                ];
                 $catalogue = new MessageCatalogue($locale, $data);
 
                 Cache::save($catalogue, $cacheKey, ['translator', 'translator_website', 'translate'], null, 999);
@@ -252,15 +263,18 @@ class Translator implements TranslatorInterface, TranslatorBagInterface, LocaleA
      *
      * @throws \Exception
      */
-    protected function checkForEmptyTranslation($id, $translated, $parameters, $domain, $locale)
+    private function checkForEmptyTranslation($id, $translated, $parameters, $domain, $locale)
     {
         if (empty($id)) {
             return $translated;
         }
 
         $normalizedId = $id;
-        if (isset($parameters['%count%']) && $translated) {
+
+        //translate only plural form(seperated by pipe "|") with count param
+        if (isset($parameters['%count%']) && $translated && strpos($normalizedId, '|') !== false) {
             $normalizedId = $id = $translated;
+            $translated = $this->translator->trans($normalizedId, $parameters, $domain, $locale);
         }
 
         $lookForFallback = empty($translated);
@@ -333,6 +347,8 @@ class Translator implements TranslatorInterface, TranslatorBagInterface, LocaleA
     }
 
     /**
+     * @internal
+     *
      * @return string
      */
     public function getAdminPath()
@@ -341,6 +357,8 @@ class Translator implements TranslatorInterface, TranslatorBagInterface, LocaleA
     }
 
     /**
+     * @internal
+     *
      * @param string $adminPath
      */
     public function setAdminPath($adminPath)
@@ -349,6 +367,8 @@ class Translator implements TranslatorInterface, TranslatorBagInterface, LocaleA
     }
 
     /**
+     * @internal
+     *
      * @return array
      */
     public function getAdminTranslationMapping(): array
@@ -357,6 +377,8 @@ class Translator implements TranslatorInterface, TranslatorBagInterface, LocaleA
     }
 
     /**
+     * @internal
+     *
      * @param array $adminTranslationMapping
      */
     public function setAdminTranslationMapping(array $adminTranslationMapping): void
@@ -365,6 +387,8 @@ class Translator implements TranslatorInterface, TranslatorBagInterface, LocaleA
     }
 
     /**
+     * @internal
+     *
      * @return Kernel
      */
     public function getKernel()
@@ -373,6 +397,8 @@ class Translator implements TranslatorInterface, TranslatorBagInterface, LocaleA
     }
 
     /**
+     * @internal
+     *
      * @param Kernel $kernel
      */
     public function setKernel($kernel)
@@ -390,7 +416,12 @@ class Translator implements TranslatorInterface, TranslatorBagInterface, LocaleA
         $this->disableTranslations = $disableTranslations;
     }
 
-    public function updateLinks(string $text)
+    /**
+     * @param string $text
+     *
+     * @return string
+     */
+    private function updateLinks(string $text): string
     {
         if (strpos($text, 'pimcore_id')) {
             $text = Tool\Text::wysiwygText($text);

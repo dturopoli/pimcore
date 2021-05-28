@@ -1,5 +1,18 @@
 <?php
 
+/**
+ * Pimcore
+ *
+ * This source file is available under two different licenses:
+ * - GNU General Public License version 3 (GPLv3)
+ * - Pimcore Commercial License (PCL)
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ *  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
+ *  @license    http://www.pimcore.org/license     GPLv3 and PCL
+ */
+
 namespace Pimcore\Tests\Test\DataType;
 
 use Pimcore\Cache;
@@ -98,7 +111,7 @@ abstract class AbstractDataTypeTestCase extends TestCase
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function needsDb()
     {
@@ -763,6 +776,7 @@ abstract class AbstractDataTypeTestCase extends TestCase
         $invalidSlug = new UrlSlug('/xyz      /abc');
         $this->testObject->setUrlSlug([$invalidSlug]);
         $ex = null;
+
         try {
             $this->testObject->save();
         } catch (\Exception $e) {
@@ -785,6 +799,7 @@ abstract class AbstractDataTypeTestCase extends TestCase
         $duplicateSlug = new UrlSlug('/xyz/abc');
         $this->testObject->setUrlSlug2([$duplicateSlug]);
         $ex = null;
+
         try {
             $this->testObject->save();
         } catch (\Exception $e) {

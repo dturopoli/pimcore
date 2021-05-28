@@ -1,15 +1,16 @@
 <?php
+
 /**
  * Pimcore
  *
  * This source file is available under two different licenses:
  * - GNU General Public License version 3 (GPLv3)
- * - Pimcore Enterprise License (PEL)
+ * - Pimcore Commercial License (PCL)
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
- * @license    http://www.pimcore.org/license     GPLv3 and PEL
+ *  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
+ *  @license    http://www.pimcore.org/license     GPLv3 and PCL
  */
 
 namespace Pimcore\Bundle\EcommerceFrameworkBundle\CheckoutManager\V7;
@@ -41,6 +42,7 @@ class CheckoutManager implements CheckoutManagerInterface
      * always concatenated with current cart id
      */
     const CURRENT_STEP = 'checkout_current_step';
+
     const FINISHED = 'checkout_finished';
 
     /**
@@ -180,7 +182,7 @@ class CheckoutManager implements CheckoutManagerInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function hasActivePayment()
     {
@@ -238,7 +240,7 @@ class CheckoutManager implements CheckoutManagerInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function initOrderPayment()
     {
@@ -251,7 +253,7 @@ class CheckoutManager implements CheckoutManagerInterface
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      *
      * @throws \Exception
      */
@@ -278,7 +280,7 @@ class CheckoutManager implements CheckoutManagerInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function cancelStartedOrderPayment()
     {
@@ -295,7 +297,7 @@ class CheckoutManager implements CheckoutManagerInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getOrder()
     {
@@ -326,7 +328,7 @@ class CheckoutManager implements CheckoutManagerInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      *
      * @throws UnsupportedException
      * @throws \Exception
@@ -349,6 +351,7 @@ class CheckoutManager implements CheckoutManagerInterface
 
         // delegate commit order to commit order processor
         $order = null;
+
         try {
             $order = $commitOrderProcessor->handlePaymentResponseAndCommitOrderPayment($paymentResponseParams, $this->getPayment());
         } catch (\Exception $e) {
@@ -372,7 +375,7 @@ class CheckoutManager implements CheckoutManagerInterface
     protected function verifyRecurringPayment(RecurringPaymentInterface $provider, AbstractOrder $sourceOrder, string $customerId)
     {
 
-        /* @var OrderManager $orderManager */
+        // @var OrderManager $orderManager
         $orderManager = $this->orderManagers->getOrderManager();
 
         if (!$provider->isRecurringPaymentEnabled()) {
@@ -405,7 +408,7 @@ class CheckoutManager implements CheckoutManagerInterface
         //verify recurring payment
         $orderManager = $this->orderManagers->getOrderManager();
         $sourceOrderAgent = $orderManager->createOrderAgent($sourceOrder);
-        /* @var RecurringPaymentInterface $paymentProvider */
+        // @var RecurringPaymentInterface $paymentProvider
         $paymentProvider = $sourceOrderAgent->getPaymentProvider();
         $this->verifyRecurringPayment($paymentProvider, $sourceOrder, $customerId);
 
@@ -441,7 +444,7 @@ class CheckoutManager implements CheckoutManagerInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      *
      * @throws UnsupportedException
      */
@@ -467,7 +470,7 @@ class CheckoutManager implements CheckoutManagerInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      *
      * @throws UnsupportedException
      */
@@ -526,7 +529,7 @@ class CheckoutManager implements CheckoutManagerInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getCart()
     {
@@ -534,7 +537,7 @@ class CheckoutManager implements CheckoutManagerInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getCheckoutStep($stepName)
     {
@@ -542,7 +545,7 @@ class CheckoutManager implements CheckoutManagerInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getCheckoutSteps()
     {
@@ -550,7 +553,7 @@ class CheckoutManager implements CheckoutManagerInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getCurrentStep()
     {
@@ -567,7 +570,7 @@ class CheckoutManager implements CheckoutManagerInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function isFinished()
     {
@@ -575,7 +578,7 @@ class CheckoutManager implements CheckoutManagerInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function isCommitted()
     {
@@ -585,7 +588,7 @@ class CheckoutManager implements CheckoutManagerInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function getPayment()
     {
@@ -593,7 +596,7 @@ class CheckoutManager implements CheckoutManagerInterface
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function cleanUpPendingOrders()
     {

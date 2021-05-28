@@ -1,15 +1,16 @@
 <?php
+
 /**
  * Pimcore
  *
  * This source file is available under two different licenses:
  * - GNU General Public License version 3 (GPLv3)
- * - Pimcore Enterprise License (PEL)
+ * - Pimcore Commercial License (PCL)
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
- * @license    http://www.pimcore.org/license     GPLv3 and PEL
+ *  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
+ *  @license    http://www.pimcore.org/license     GPLv3 and PCL
  */
 
 namespace Pimcore\Bundle\EcommerceFrameworkBundle\IndexService\ProductList\ElasticSearch;
@@ -24,7 +25,9 @@ use Pimcore\Bundle\EcommerceFrameworkBundle\Model\IndexableInterface;
 abstract class AbstractElasticSearch implements ProductListInterface
 {
     const LIMIT_UNLIMITED = 'unlimited';
+
     const INTEGER_MAX_VALUE = 2147483647;     // Elasticsearch Integer.MAX_VALUE is 2^31-1
+
     const ADVANCED_SORT = 'advanced_sort';
 
     /**
@@ -52,7 +55,7 @@ abstract class AbstractElasticSearch implements ProductListInterface
     protected $tenantName;
 
     /**
-     * @var ElasticSearch
+     * @var ElasticSearchConfigInterface
      */
     protected $tenantConfig;
 
@@ -209,11 +212,7 @@ abstract class AbstractElasticSearch implements ProductListInterface
         return $this;
     }
 
-    /**
-     * Returns all products valid for this search
-     *
-     * @return IndexableInterface[]
-     */
+    /** @inheritDoc */
     public function getProducts()
     {
         if ($this->products === null) {
@@ -1418,30 +1417,14 @@ abstract class AbstractElasticSearch implements ProductListInterface
         return $var;
     }
 
-    /**
-     * (PHP 5 &gt;= 5.1.0)<br/>
-     * Move forward to next element
-     *
-     * @link http://php.net/manual/en/iterator.next.php
-     *
-     * @return void Any returned value is ignored.
-     */
+    /** @inheritDoc */
     public function next()
     {
         $this->getProducts();
         $var = next($this->products);
-
-        return $var;
     }
 
-    /**
-     * (PHP 5 &gt;= 5.1.0)<br/>
-     * Rewind the Iterator to the first element
-     *
-     * @link http://php.net/manual/en/iterator.rewind.php
-     *
-     * @return void Any returned value is ignored.
-     */
+    /** @inheritDoc */
     public function rewind()
     {
         $this->getProducts();

@@ -1,15 +1,16 @@
 <?php
+
 /**
  * Pimcore
  *
  * This source file is available under two different licenses:
  * - GNU General Public License version 3 (GPLv3)
- * - Pimcore Enterprise License (PEL)
+ * - Pimcore Commercial License (PCL)
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
- * @license    http://www.pimcore.org/license     GPLv3 and PEL
+ *  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
+ *  @license    http://www.pimcore.org/license     GPLv3 and PCL
  */
 
 namespace Pimcore;
@@ -19,7 +20,7 @@ use Pimcore\Http\RequestHelper;
 use Pimcore\Localization\LocaleServiceInterface;
 use Symfony\Component\HttpFoundation\Request;
 
-class Tool
+final class Tool
 {
     /**
      * Sets the current request to use when resolving request at early
@@ -48,34 +49,12 @@ class Tool
      * Sets the current request to operate on
      *
      * @param Request|null $request
+     *
+     * @internal
      */
     public static function setCurrentRequest(Request $request = null)
     {
         self::$currentRequest = $request;
-    }
-
-    /**
-     * returns a valid cache key/tag string
-     *
-     * @param string $key
-     *
-     * @return string
-     */
-    public static function getValidCacheKey($key)
-    {
-        return preg_replace('/[^a-zA-Z0-9]/', '_', $key);
-    }
-
-    /**
-     * @static
-     *
-     * @param string $path
-     *
-     * @return bool
-     */
-    public static function isValidPath($path)
-    {
-        return (bool) preg_match("/^[a-zA-Z0-9_~\.\-\/ ]+$/", $path, $matches);
     }
 
     /**
@@ -139,6 +118,8 @@ class Tool
     }
 
     /**
+     * @internal
+     *
      * @param string $language
      *
      * @return array
@@ -221,6 +202,8 @@ class Tool
     }
 
     /**
+     * @internal
+     *
      * @param string $language
      * @param bool $absolutePath
      *
@@ -289,7 +272,7 @@ class Tool
      *
      * @return null|Request
      */
-    public static function resolveRequest(Request $request = null)
+    private static function resolveRequest(Request $request = null)
     {
         if (null === $request) {
             // do an extra check for the container as we might be in a state where no container is set yet
@@ -306,8 +289,6 @@ class Tool
     }
 
     /**
-     * @static
-     *
      * @param Request|null $request
      *
      * @return bool
@@ -348,7 +329,7 @@ class Tool
     }
 
     /**
-     * @static
+     * @internal
      *
      * @param Request|null $request
      *
@@ -376,7 +357,7 @@ class Tool
         );
 
         // check for manually disabled ?pimcore_outputfilters_disabled=true
-        if (array_key_exists('pimcore_outputfilters_disabled', $requestKeys) && \Pimcore::inDebugMode()) {
+        if (in_array('pimcore_outputfilters_disabled', $requestKeys) && \Pimcore::inDebugMode()) {
             return false;
         }
 
@@ -384,7 +365,7 @@ class Tool
     }
 
     /**
-     * @static
+     * @internal
      *
      * @param Request|null $request
      *
@@ -402,6 +383,8 @@ class Tool
     }
 
     /**
+     * @internal
+     *
      * @return string
      */
     public static function getRequestScheme(Request $request = null)
@@ -460,7 +443,7 @@ class Tool
     }
 
     /**
-     * @static
+     * @internal
      *
      * @param Request|null $request
      *
@@ -491,6 +474,8 @@ class Tool
     }
 
     /**
+     * @internal
+     *
      * @param Request|null $request
      *
      * @return null|string
@@ -509,7 +494,7 @@ class Tool
     }
 
     /**
-     * @static
+     * @internal
      *
      * @return array|bool
      */
@@ -579,8 +564,6 @@ class Tool
     }
 
     /**
-     * @static
-     *
      * @param string $url
      * @param array $paramsGet
      * @param array $paramsPost
@@ -629,6 +612,8 @@ class Tool
     }
 
     /**
+     * @internal
+     *
      * @param string $class
      *
      * @return bool
@@ -639,6 +624,8 @@ class Tool
     }
 
     /**
+     * @internal
+     *
      * @param string $class
      *
      * @return bool
@@ -649,6 +636,8 @@ class Tool
     }
 
     /**
+     * @internal
+     *
      * @param string $class
      *
      * @return bool
@@ -664,7 +653,7 @@ class Tool
      *
      * @return bool
      */
-    protected static function classInterfaceExists($class, $type)
+    private static function classInterfaceExists($class, $type)
     {
         $functionName = $type . '_exists';
 
@@ -701,6 +690,8 @@ class Tool
     }
 
     /**
+     * @internal
+     *
      * @return array
      */
     public static function getCachedSymfonyEnvironments(): array
@@ -715,6 +706,8 @@ class Tool
     }
 
     /**
+     * @internal
+     *
      * @param string $message
      */
     public static function exitWithError($message)

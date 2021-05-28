@@ -1,15 +1,16 @@
 <?php
+
 /**
  * Pimcore
  *
  * This source file is available under two different licenses:
  * - GNU General Public License version 3 (GPLv3)
- * - Pimcore Enterprise License (PEL)
+ * - Pimcore Commercial License (PCL)
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
- * @license    http://www.pimcore.org/license     GPLv3 and PEL
+ *  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
+ *  @license    http://www.pimcore.org/license     GPLv3 and PCL
  */
 
 namespace Pimcore\Event;
@@ -312,7 +313,7 @@ final class AdminEvents
     /**
      * Fired before the request params are parsed.
      *
-     * Subject: \Pimcore\Bundle\AdminBundle\Controller\Admin\AssetController
+     * Subject: \Pimcore\Bundle\AdminBundle\Controller\Admin\Asset\AssetController
      * Arguments:
      *  - data | array | the response data, this can be modified
      *  - asset | Asset | the current asset
@@ -324,7 +325,7 @@ final class AdminEvents
     const ASSET_GET_PRE_SEND_DATA = 'pimcore.admin.asset.get.preSendData';
 
     /**
-     * Subject: \Pimcore\Bundle\AdminBundle\Controller\Admin\AssetController
+     * Subject: \Pimcore\Bundle\AdminBundle\Controller\Admin\Asset\AssetController
      * Arguments:
      *  - assets | array | the list of asset tree nodes
      *
@@ -502,7 +503,7 @@ final class AdminEvents
     const ELEMENT_PERMISSION_IS_ALLOWED = 'pimcore.admin.permissions.elementIsAllowed';
 
     /**
-     * Subject: \Pimcore\Bundle\AdminBundle\Controller\Admin\AssetController
+     * Subject: \Pimcore\Bundle\AdminBundle\Controller\Admin\Asset\AssetController
      * Arguments:
      *  - id | int | asset id
      *  - metadata | array | contains the data received from the editor UI

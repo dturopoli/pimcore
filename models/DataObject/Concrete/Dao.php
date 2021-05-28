@@ -1,18 +1,16 @@
 <?php
+
 /**
  * Pimcore
  *
  * This source file is available under two different licenses:
  * - GNU General Public License version 3 (GPLv3)
- * - Pimcore Enterprise License (PEL)
+ * - Pimcore Commercial License (PCL)
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @category   Pimcore
- * @package    Object
- *
- * @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
- * @license    http://www.pimcore.org/license     GPLv3 and PEL
+ *  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
+ *  @license    http://www.pimcore.org/license     GPLv3 and PCL
  */
 
 namespace Pimcore\Model\DataObject\Concrete;
@@ -33,6 +31,8 @@ use Pimcore\Model\DataObject\ClassDefinition\Data\ResourcePersistenceAwareInterf
  */
 class Dao extends Model\DataObject\AbstractObject\Dao
 {
+    use Model\Element\Traits\VersionDaoTrait;
+
     /**
      * @var DataObject\Concrete\Dao\InheritanceHelper
      */
@@ -47,22 +47,20 @@ class Dao extends Model\DataObject\AbstractObject\Dao
      * Get the data for the object from database for the given id
      *
      * @param int $id
+     *
+     * @throws Model\Exception\NotFoundException
      */
     public function getById($id)
     {
-        try {
-            $data = $this->db->fetchRow("SELECT objects.*, tree_locks.locked as o_locked FROM objects
-                LEFT JOIN tree_locks ON objects.o_id = tree_locks.id AND tree_locks.type = 'object'
-                    WHERE o_id = ?", $id);
+        $data = $this->db->fetchRow("SELECT objects.*, tree_locks.locked as o_locked FROM objects
+            LEFT JOIN tree_locks ON objects.o_id = tree_locks.id AND tree_locks.type = 'object'
+                WHERE o_id = ?", $id);
 
-            if ($data['o_id']) {
-                $this->assignVariablesToModel($data);
-                $this->getData();
-            } else {
-                throw new \Exception('Object with the ID ' . $id . " doesn't exists");
-            }
-        } catch (\Exception $e) {
-            Logger::warning($e);
+        if (!empty($data['o_id'])) {
+            $this->assignVariablesToModel($data);
+            $this->getData();
+        } else {
+            throw new Model\Exception\NotFoundException('Object with the ID ' . $id . " doesn't exists");
         }
     }
 
@@ -149,7 +147,9 @@ class Dao extends Model\DataObject\AbstractObject\Dao
             return;
         }
 
-        $data = $this->db->fetchRow('SELECT * FROM object_store_' . $this->model->getClassId() . ' WHERE oo_id = ?', $this->model->getId());
+        if (!$data = $this->db->fetchRow('SELECT * FROM object_store_' . $this->model->getClassId() . ' WHERE oo_id = ?', $this->model->getId())) {
+            return;
+        }
 
         $fieldDefinitions = $this->model->getClass()->getFieldDefinitions(['object' => $this->model]);
         foreach ($fieldDefinitions as $key => $value) {
@@ -178,9 +178,10 @@ class Dao extends Model\DataObject\AbstractObject\Dao
                     }
                     $this->model->setValue($key, $value->getDataFromResource($multidata));
                 } else {
-                    $this->model->setValue($key, $value->getDataFromResource($data[$key], $this->model,
-                            ['owner' => $this->model,
-                                'fieldname' => $key, ]));
+                    $this->model->setValue($key, $value->getDataFromResource($data[$key], $this->model, [
+                        'owner' => $this->model,
+                        'fieldname' => $key,
+                    ]));
                 }
             }
         }
@@ -349,6 +350,7 @@ class Dao extends Model\DataObject\AbstractObject\Dao
                                         // do nothing, ... value is still empty and parent data is equal to current data in query table
                                     } elseif ($oldDataValue != $insertDataValue) {
                                         $doInsert = true;
+
                                         break;
                                     }
                                 }
@@ -429,44 +431,6 @@ class Dao extends Model\DataObject\AbstractObject\Dao
         }
 
         parent::delete();
-    }
-
-    /**
-     * get versions from database, and assign it to object
-     *
-     * @return Model\Version[]
-     */
-    public function getVersions()
-    {
-        $versionIds = $this->db->fetchCol("SELECT id FROM versions WHERE cid = ? AND ctype='object' ORDER BY `id` ASC", $this->model->getId());
-
-        $versions = [];
-        foreach ($versionIds as $versionId) {
-            $versions[] = Model\Version::getById($versionId);
-        }
-
-        $this->model->setVersions($versions);
-
-        return $versions;
-    }
-
-    /**
-     * Get latest available version, using $force always returns a version no matter if it is the same as the published one
-     *
-     * @param bool $force
-     *
-     * @return Model\Version|null
-     *
-     * @todo: should return null or false explicit
-     */
-    public function getLatestVersion($force = false)
-    {
-        if ($this->model instanceof DataObject\Concrete) {
-            return DataObject\Concrete::getLatestVersionByObjectIdAndLatestModificationDate($this->model->getId(),
-                $this->model->getModificationDate(), $this->model->getVersionCount(), $force);
-        }
-
-        return;
     }
 
     public function deleteAllTasks()

@@ -1,5 +1,18 @@
 <?php
 
+/**
+ * Pimcore
+ *
+ * This source file is available under two different licenses:
+ * - GNU General Public License version 3 (GPLv3)
+ * - Pimcore Commercial License (PCL)
+ * Full copyright and license information is available in
+ * LICENSE.md which is distributed with this source code.
+ *
+ *  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
+ *  @license    http://www.pimcore.org/license     GPLv3 and PCL
+ */
+
 namespace Pimcore\Bundle\EcommerceFrameworkBundle\CheckoutManager\V7;
 
 use Pimcore\Bundle\EcommerceFrameworkBundle\CheckoutManager\CommitOrderProcessorInterface;
@@ -27,6 +40,7 @@ class CommitOrderProcessor implements CommitOrderProcessorInterface, LoggerAware
     use LoggerAwareTrait;
 
     const LOCK_KEY = 'ecommerce-framework-commitorder-lock';
+
     const LOGGER_NAME = 'commit-order-processor';
 
     /**
@@ -137,7 +151,7 @@ class CommitOrderProcessor implements CommitOrderProcessorInterface, LoggerAware
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      *
      * @throws UnsupportedException
      */
@@ -157,7 +171,7 @@ class CommitOrderProcessor implements CommitOrderProcessorInterface, LoggerAware
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function committedOrderWithSamePaymentExists($paymentResponseParams, PaymentInterface $paymentProvider)
     {
@@ -188,7 +202,7 @@ class CommitOrderProcessor implements CommitOrderProcessorInterface, LoggerAware
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      *
      * @throws UnsupportedException|PaymentNotSuccessfulException
      * @throws \Exception
@@ -215,6 +229,7 @@ class CommitOrderProcessor implements CommitOrderProcessorInterface, LoggerAware
         if (empty($order)) {
             $message = 'No order found for payment status: ' . print_r($paymentStatus, true);
             $this->logger->error($message);
+
             throw new \Exception($message);
         }
 
@@ -274,7 +289,7 @@ class CommitOrderProcessor implements CommitOrderProcessorInterface, LoggerAware
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function commitOrder(AbstractOrder $order)
     {
@@ -307,7 +322,7 @@ class CommitOrderProcessor implements CommitOrderProcessorInterface, LoggerAware
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     protected function sendConfirmationMail(AbstractOrder $order)
     {

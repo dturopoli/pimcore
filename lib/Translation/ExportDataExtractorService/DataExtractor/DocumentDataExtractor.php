@@ -1,15 +1,16 @@
 <?php
+
 /**
  * Pimcore
  *
  * This source file is available under two different licenses:
  * - GNU General Public License version 3 (GPLv3)
- * - Pimcore Enterprise License (PEL)
+ * - Pimcore Commercial License (PCL)
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
- * @license    http://www.pimcore.org/license     GPLv3 and PEL
+ *  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
+ *  @license    http://www.pimcore.org/license     GPLv3 and PCL
  */
 
 namespace Pimcore\Translation\ExportDataExtractorService\DataExtractor;
@@ -129,15 +130,30 @@ class DocumentDataExtractor extends AbstractElementDataExtractor
      */
     protected function addSettings(Document $document, AttributeSet $result): DocumentDataExtractor
     {
+        $service = new Document\Service;
+        $translations = $service->getTranslations($document);
+
         if ($document instanceof Document\Page) {
             $data = [
                 'title' => $document->getTitle(),
                 'description' => $document->getDescription(),
             ];
 
+            $targetData = [];
+            foreach ($result->getTargetLanguages() as $targetLanguage) {
+                if (isset($translations[$targetLanguage])) {
+                    $targetDocument = Document::getById($translations[$targetLanguage]);
+
+                    if ($targetDocument instanceof  Document\PageSnippet) {
+                        $targetData['title'][$targetLanguage] = $document->getTitle();
+                        $targetData['description'][$targetLanguage] = $document->getDescription();
+                    }
+                }
+            }
+
             foreach ($data as $key => $content) {
                 if (!empty(trim($content))) {
-                    $result->addAttribute(Attribute::TYPE_SETTINGS, $key, $content);
+                    $result->addAttribute(Attribute::TYPE_SETTINGS, $key, $content, false, $targetData[$key] ?? []);
                 }
             }
         }

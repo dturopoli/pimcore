@@ -5,28 +5,33 @@
  *
  * This source file is available under two different licenses:
  * - GNU General Public License version 3 (GPLv3)
- * - Pimcore Enterprise License (PEL)
+ * - Pimcore Commercial License (PCL)
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @category   Pimcore
- *
- * @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
- * @license    http://www.pimcore.org/license     GPLv3 and PEL
+ *  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
+ *  @license    http://www.pimcore.org/license     GPLv3 and PCL
  */
 
 namespace Pimcore\Model\DataObject\ClassDefinition\Layout\Traits;
 
+/**
+ * @internal
+ */
 trait LabelTrait
 {
     /**
      * Width of input field labels
+     *
+     * @internal
      *
      * @var string|int
      */
     public $labelWidth = 100;
 
     /**
+     * @internal
+     *
      * @var string
      */
     public $labelAlign = 'left';

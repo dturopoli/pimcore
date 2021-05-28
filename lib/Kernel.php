@@ -1,15 +1,16 @@
 <?php
+
 /**
  * Pimcore
  *
  * This source file is available under two different licenses:
  * - GNU General Public License version 3 (GPLv3)
- * - Pimcore Enterprise License (PEL)
+ * - Pimcore Commercial License (PCL)
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
- * @license    http://www.pimcore.org/license     GPLv3 and PEL
+ *  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
+ *  @license    http://www.pimcore.org/license     GPLv3 and PCL
  */
 
 namespace Pimcore;
@@ -17,6 +18,7 @@ namespace Pimcore;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle;
 use FOS\JsRoutingBundle\FOSJsRoutingBundle;
+use League\FlysystemBundle\FlysystemBundle;
 use Pimcore\Bundle\AdminBundle\PimcoreAdminBundle;
 use Pimcore\Bundle\CoreBundle\PimcoreCoreBundle;
 use Pimcore\Cache\Runtime;
@@ -96,6 +98,9 @@ abstract class Kernel extends SymfonyKernel
         return PIMCORE_LOG_DIRECTORY;
     }
 
+    /**
+     * {@inheritdoc}
+     */
     protected function configureContainer(ContainerConfigurator $container): void
     {
         $projectDir = realpath($this->getProjectDir());
@@ -111,6 +116,9 @@ abstract class Kernel extends SymfonyKernel
         }
     }
 
+    /**
+     * {@inheritdoc}
+     */
     protected function configureRoutes(RoutingConfigurator $routes): void
     {
         $projectDir = realpath($this->getProjectDir());
@@ -130,21 +138,21 @@ abstract class Kernel extends SymfonyKernel
      */
     public function registerContainerConfiguration(LoaderInterface $loader)
     {
-        $this->microKernelRegisterContainerConfiguration($loader);
-
         $loader->load(function (ContainerBuilder $container) {
             $this->registerExtensionConfigFileResources($container);
         });
+
+        $bundleConfigLocator = new BundleConfigLocator($this);
+        foreach ($bundleConfigLocator->locate('config') as $bundleConfig) {
+            $loader->load($bundleConfig);
+        }
+
+        $this->microKernelRegisterContainerConfiguration($loader);
 
         //load system configuration
         $systemConfigFile = Config::locateConfigFile('system.yml');
         if (file_exists($systemConfigFile)) {
             $loader->load($systemConfigFile);
-        }
-
-        $bundleConfigLocator = new BundleConfigLocator($this);
-        foreach ($bundleConfigLocator->locate('config') as $bundleConfig) {
-            $loader->load($bundleConfig);
         }
     }
 
@@ -174,7 +182,7 @@ abstract class Kernel extends SymfonyKernel
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function boot()
     {
@@ -195,7 +203,7 @@ abstract class Kernel extends SymfonyKernel
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function shutdown()
     {
@@ -204,11 +212,11 @@ abstract class Kernel extends SymfonyKernel
             $this->container->get(\Pimcore\Helper\LongRunningHelper::class)->cleanUp();
         }
 
-        return parent::shutdown();
+        parent::shutdown();
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     protected function initializeContainer()
     {
@@ -307,6 +315,7 @@ abstract class Kernel extends SymfonyKernel
             new PrestaSitemapBundle(),
             new SchebTwoFactorBundle(),
             new FOSJsRoutingBundle(),
+            new FlysystemBundle(),
         ], 100);
 
         // pimcore bundles
@@ -316,7 +325,7 @@ abstract class Kernel extends SymfonyKernel
         ], 60);
 
         // load development bundles only in matching environments
-        if (in_array($this->getEnvironment(), $this->getEnvironmentsForDevBundles(), true)) {
+        if ($this->isDebug() && in_array($this->getEnvironment(), $this->getEnvironmentsForDevBundles(), true)) {
             $collection->addBundles([
                 new DebugBundle(),
                 new WebProfilerBundle(),

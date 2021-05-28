@@ -1,15 +1,16 @@
 <?php
+
 /**
  * Pimcore
  *
  * This source file is available under two different licenses:
  * - GNU General Public License version 3 (GPLv3)
- * - Pimcore Enterprise License (PEL)
+ * - Pimcore Commercial License (PCL)
  * Full copyright and license information is available in
  * LICENSE.md which is distributed with this source code.
  *
- * @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
- * @license    http://www.pimcore.org/license     GPLv3 and PEL
+ *  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.org)
+ *  @license    http://www.pimcore.org/license     GPLv3 and PCL
  */
 
 namespace Pimcore\Routing\Staticroute;
@@ -30,9 +31,11 @@ use Symfony\Component\Routing\RouteCollection;
 use Symfony\Component\Routing\RouterInterface;
 
 /**
+ * @internal
+ *
  * A custom router implementation handling pimcore static routes.
  */
-class Router implements RouterInterface, RequestMatcherInterface, VersatileGeneratorInterface, LoggerAwareInterface
+final class Router implements RouterInterface, RequestMatcherInterface, VersatileGeneratorInterface, LoggerAwareInterface
 {
     use LoggerAwareTrait;
 
@@ -63,6 +66,10 @@ class Router implements RouterInterface, RequestMatcherInterface, VersatileGener
      */
     protected $config;
 
+    /**
+     * @param RequestContext $context
+     * @param Config $config
+     */
     public function __construct(RequestContext $context, Config $config)
     {
         $this->context = $context;
@@ -70,7 +77,7 @@ class Router implements RouterInterface, RequestMatcherInterface, VersatileGener
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function setContext(RequestContext $context)
     {
@@ -78,25 +85,31 @@ class Router implements RouterInterface, RequestMatcherInterface, VersatileGener
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function getContext()
     {
         return $this->context;
     }
 
+    /**
+     * @return array
+     */
     public function getLocaleParams(): array
     {
         return $this->localeParams;
     }
 
+    /**
+     * @param array $localeParams
+     */
     public function setLocaleParams(array $localeParams)
     {
         $this->localeParams = $localeParams;
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function supports($name)
     {
@@ -104,7 +117,7 @@ class Router implements RouterInterface, RequestMatcherInterface, VersatileGener
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function getRouteCollection()
     {
@@ -112,7 +125,7 @@ class Router implements RouterInterface, RequestMatcherInterface, VersatileGener
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function getRouteDebugMessage($name, array $parameters = [])
     {
@@ -120,7 +133,7 @@ class Router implements RouterInterface, RequestMatcherInterface, VersatileGener
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function generate($name, $parameters = [], $referenceType = self::ABSOLUTE_PATH)
     {
@@ -208,7 +221,7 @@ class Router implements RouterInterface, RequestMatcherInterface, VersatileGener
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function matchRequest(Request $request)
     {
@@ -216,7 +229,7 @@ class Router implements RouterInterface, RequestMatcherInterface, VersatileGener
     }
 
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function match($pathinfo)
     {
@@ -294,6 +307,7 @@ class Router implements RouterInterface, RequestMatcherInterface, VersatileGener
             foreach ($this->localeParams as $localeParam) {
                 if (isset($routeParams[$localeParam])) {
                     $routeParams['_locale'] = $routeParams[$localeParam];
+
                     break;
                 }
             }
